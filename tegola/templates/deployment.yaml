@@ -33,12 +33,20 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /capabilities
               port: http
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /
+              path: /capabilities
               port: http
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
