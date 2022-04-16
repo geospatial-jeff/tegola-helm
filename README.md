@@ -34,3 +34,45 @@ Customize behavior of the deployment through `values.yaml`:
 | `tolerations` | Add tolerations.                               | `[]`     |
 | `affinity` | Configure affinity policy                            | `{}`     |
 
+## Secret Management
+You may use environment variables and k8s secrets to inject database credentials if you don't want
+to leave that information in the tegola config file (which is mounted as a configmap).  First update tegola
+config to [pull database information from the environment](https://tegola.io/documentation/configuration/#env-var):
+
+```toml
+# config.toml
+[[providers]]
+user = "${PGUSER}"           # postgis database user
+password = "${PGPASSWORD}"   # postgis database password
+```
+
+Next create a k8s secret with username/password and deploy to your namespace:
+
+```yaml
+# secret.yaml
+apiVersion: v1
+data:
+  username: YWRtaW4=
+  password: MWYyZDFlMmU2N2Rm
+metadata:
+  name: db-credentials
+kind: Secret
+type: Opaque
+```
+
+Finally, update the container environment to inject these environment variables from the k8s secret:
+
+```yaml
+# values.yaml
+env:
+  - name: PGUSER
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: username
+  - name: PGPASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: password
+```
